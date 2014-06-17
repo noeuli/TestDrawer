@@ -56,7 +56,19 @@ public class NavigationDrawerFragment extends Fragment {
     private int mCurrentSelectedPosition = 0;
     private boolean mFromSavedInstanceState;
     private boolean mUserLearnedDrawer;
-
+    
+    // noeuli added [
+    private TestController mController;
+    
+    public void setController(TestController controller) {
+        mController = controller;
+    }
+    
+    public TestController getController() {
+        return mController;
+    }
+    // noeuli added ]    
+    
     public NavigationDrawerFragment() {
     }
 
@@ -88,6 +100,9 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
+        // noeuli
+        mController = new TestController();
+        
         mDrawerListView = (ListView) inflater.inflate(
                 R.layout.fragment_navigation_drawer, container, false);
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -96,6 +111,16 @@ public class NavigationDrawerFragment extends Fragment {
                 selectItem(position);
             }
         });
+        
+        // noeuli - change to calener list
+        String[] calendarLabels = mController.getCalendarListArray(); 
+        mDrawerListView.setAdapter(new ArrayAdapter<String>(
+                getActionBar().getThemedContext(),
+                android.R.layout.simple_list_item_1,
+                android.R.id.text1,
+                calendarLabels
+                ));
+        /* Original codes
         mDrawerListView.setAdapter(new ArrayAdapter<String>(
                 getActionBar().getThemedContext(),
                 android.R.layout.simple_list_item_activated_1,
@@ -105,6 +130,7 @@ public class NavigationDrawerFragment extends Fragment {
                         getString(R.string.title_section2),
                         getString(R.string.title_section3),
                 }));
+        */
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
     }
@@ -247,7 +273,15 @@ public class NavigationDrawerFragment extends Fragment {
         }
 
         if (item.getItemId() == R.id.action_example) {
-            Toast.makeText(getActivity(), "Example action.", Toast.LENGTH_SHORT).show();
+            String toastMessage = "Example action.";
+            Activity activity = getActivity();
+            if (activity instanceof MainActivity) {
+                MainActivity mainActivity = (MainActivity) activity;
+                // TODO: move showToast() method into other util class.
+                mainActivity.showToast(toastMessage);
+            } else {
+                Toast.makeText(getActivity(), toastMessage, Toast.LENGTH_SHORT).show();
+            }
             return true;
         }
 
