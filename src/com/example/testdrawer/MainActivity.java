@@ -4,8 +4,9 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.os.Bundle;
 import android.app.FragmentTransaction;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -77,7 +78,9 @@ public class MainActivity extends Activity
     public void onSectionAttached(int number) {
         // noeuli [
         mCalendarIndex = number - 1;
-        mTitle = mController.getTitle(mCalendarIndex);
+        if (mController != null) {
+            mTitle = mController.getTitle(mCalendarIndex);
+        }
         // noeuli ]
     }
 
@@ -111,6 +114,9 @@ public class MainActivity extends Activity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.action_settings) {
+            //showToast("Show calendar setting activity!");
+            Intent settings = new Intent(this, CalendarSettings.class);
+            startActivity(settings);
             return true;
         }
         return super.onOptionsItemSelected(item);
