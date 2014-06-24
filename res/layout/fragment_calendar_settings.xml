@@ -10,29 +10,11 @@
     tools:context="com.example.testdrawer.CalendarSettings$PlaceholderFragment" >
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#ffffff"
-        android:text="before" />
-    
-    <ImageView 
-        android:id="@+id/image_input"
-        android:layout_width="200dip"
-        android:layout_height="200dip"
-        android:background="#000000"
-        android:scaleType="fitXY" />
-        
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#ffffff"
-        android:text="after" />
-    
-    <ImageView 
-        android:id="@+id/image_output"
-        android:layout_width="200dip"
-        android:layout_height="200dip"
-        android:background="#000000"
-        android:scaleType="fitXY" />
-    
+        style="@style/SettingsSubTitle"
+        android:text="@string/calendar_list_setting_title" />
+    <ListView
+        android:id="@+id/calendarListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
 </LinearLayout>

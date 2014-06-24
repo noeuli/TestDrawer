@@ -12,4 +12,5 @@
     <string name="title_activity_calendar_settings">CalendarSettings</string>
     <string name="hello_world">Hello world!</string>
 
+    <string name="calendar_list_setting_title">Choose calendar to display..</string>
 </resources>
