@@ -12,25 +12,27 @@ import android.util.Log;
 
 public class CalendarData {
     private static final String TAG = "CalendarData";
+    private static final boolean LOGD = TestDrawer.LOGD;
 
     private static final String CALENDAR_URI = "content://com.android.calendar";
     private static final int INVALID_ID = -1;
     
-    private Context mContext;
     private ContentResolver mCR;
     private ArrayList<CalendarRecord> mCalendarList;
     private int mCalendarId;
     
     public CalendarData(Context ctx) {
-        mContext = ctx;
         mCR = ctx.getContentResolver();
         mCalendarList = new ArrayList<CalendarRecord>();
+        mSelectedCalendarList = new ArrayList<String>();
         mCalendarId = INVALID_ID;
         initCalendarId();
     }
 
     // Find out calendar id and save into mCalendarId
     public void initCalendarId() {
+        if (LOGD) Log.i(TAG, "initCalendarId()");
+        
         Uri calendarUri = Uri.parse(CALENDAR_URI + "/calendars");
         String[] selection = new String[] {
                 CalendarEntity._ID,
@@ -68,7 +70,7 @@ public class CalendarData {
             int rows = c.getCount();
             int cols = c.getColumnCount();
 
-            Log.w(TAG, "initCalendarId() count=" + rows + " cols=" + cols);
+            if (LOGD) Log.w(TAG, "initCalendarId() count=" + rows + " cols=" + cols);
 
             do {
                 // Temporary set the first one.
@@ -78,7 +80,7 @@ public class CalendarData {
                         c.getString(3), c.getString(4), c.getInt(5), c.getString(6));
                 mCalendarList.add(r);
                 
-                Log.d(TAG, "initCalendarId() [" + (i++) + "] record: " + r);
+                if (LOGD) Log.d(TAG, "initCalendarId() [" + (i++) + "] record: " + r);
             } while (c.moveToNext());
 
         } catch (Exception e) {
@@ -105,5 +107,65 @@ public class CalendarData {
         }
         
         return item;
+    }
+
+    public CharSequence getTitle(int index) {
+        CharSequence title = null;
+        
+        if (mCalendarList != null && mCalendarList.size() > index) {
+            CalendarRecord item = mCalendarList.get(index);
+            if (item != null) {
+                title = item.getCalendarTitle();
+            }
+        }
+        return title;
+    }
+    
+    ArrayList<String> mSelectedCalendarList = null;
+    
+    public CharSequence getSelectedTitle(int index) {
+        CharSequence title = null;
+        if (mSelectedCalendarList == null || 
+                mSelectedCalendarList.size()==0) {
+            getCalendarListArray();
+        }
+
+        if (mSelectedCalendarList.size() > index) {
+            title = mSelectedCalendarList.get(index);
+        }
+        
+        if (LOGD) Log.d(TAG, "getSelectedTitle(" + index + ") returns " + title);
+        
+        return title;
+    }
+
+    public ArrayList<String> getCalendarListArray() {
+        return getCalendarListArray(false);
+    }
+    
+    public ArrayList<String> getCalendarListArray(boolean ignoreChecked) {
+        if (mSelectedCalendarList == null) {
+            mSelectedCalendarList = new ArrayList<String>();
+        }
+        mSelectedCalendarList.clear();
+        
+        if (mCalendarList == null) return mSelectedCalendarList;
+        
+        for (int i=0; i<mCalendarList.size(); i++) {
+            CalendarRecord item = mCalendarList.get(i);
+            if (item == null) continue;
+            boolean checked = item.getCalendarChecked();
+
+            if (checked || ignoreChecked) {
+                mSelectedCalendarList.add(item.getCalendarTitle()); 
+            }
+        }
+
+        if (LOGD) {
+            Log.d(TAG, "getCalendarListArray(" + ignoreChecked + ") size=" 
+                    + mSelectedCalendarList.size() + "/" + mCalendarList.size());
+        }
+
+        return mSelectedCalendarList;
     }
 }

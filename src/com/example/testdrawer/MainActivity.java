@@ -5,9 +5,11 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,8 +20,8 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks {
-
     private static final String TAG = "MainActivity";
+    private static final boolean LOGD = TestDrawer.LOGD;
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -31,22 +33,27 @@ public class MainActivity extends Activity
      */
     private CharSequence mTitle;
     // noeuli [
+    private Context mContext;
     private int mCalendarIndex;
-    private TestController mController;
-    private Toast mToast;
+    private CalendarData mCalendarData;
     // noeuli ]
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        Log.i(TAG, "onCreate()");
+        
         setContentView(R.layout.activity_main);
 
+        mContext = getApplicationContext();
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
         // noeuli [
         mCalendarIndex = 0;
-        mController = mNavigationDrawerFragment.getController();
+        TestDrawer app = (TestDrawer) mContext;
+        mCalendarData = app.getCalendarData();
         // noeuli ]
 
         // Set up the drawer.
@@ -56,13 +63,26 @@ public class MainActivity extends Activity
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        
+        Log.i(TAG, "onResume()");
+        
+        if (mNavigationDrawerFragment != null) {
+            mNavigationDrawerFragment.updateList();
+        }
+    }
+
+    @Override
     public void onNavigationDrawerItemSelected(int position) {
         // noeuli [
         String title = (String) getTitle();
-        if (mController != null) {
-            title = (String) mController.getTitle(position);
+        if (mCalendarData != null) {
+            title = (String) mCalendarData.getSelectedTitle(position);
         }
-        updateFragment(position, title);
+        if (LOGD) Log.d(TAG, "onNavigationDrawerItemSelected(" + position + ") title=" + title);
+
+        if (title != null) updateFragment(position, title);
         // noeuli ]
     }
 
@@ -78,13 +98,17 @@ public class MainActivity extends Activity
     public void onSectionAttached(int number) {
         // noeuli [
         mCalendarIndex = number - 1;
-        if (mController != null) {
-            mTitle = mController.getTitle(mCalendarIndex);
+        if (mCalendarData != null) {
+            CharSequence title = mCalendarData.getSelectedTitle(mCalendarIndex);
+            if (title != null) mTitle = title;
+            if (LOGD) Log.d(TAG, "onSectionAttached(" + number + ") title=" + title + " mTitle=" + mTitle);
         }
         // noeuli ]
     }
 
     public void restoreActionBar() {
+        if (LOGD) Log.d(TAG, "restoreActionBar() mTitle=" + mTitle);
+        
         ActionBar actionBar = getActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
@@ -122,23 +146,12 @@ public class MainActivity extends Activity
         return super.onOptionsItemSelected(item);
     }
 
-    // noeuli [
-    public void showToast(String msg) {
-        if (mToast == null) {
-            mToast = Toast.makeText(this, msg, Toast.LENGTH_SHORT);
-        } else {
-            mToast.setText(msg);
-        }
-        if (mToast != null) {
-            mToast.show();
-        }
-    }
-    // noeuli ]
-
     /**
      * A placeholder fragment containing a simple view.
      */
     public static class PlaceholderFragment extends Fragment {
+        private static final String TAG = "MainActivity.PlaceholderFragment";
+        
         /**
          * The fragment argument representing the section number for this
          * fragment.
@@ -151,6 +164,7 @@ public class MainActivity extends Activity
          * number.
          */
         public static PlaceholderFragment newInstance(int sectionNumber, String title) {
+            Log.i(TAG, "newInstance()");
             PlaceholderFragment fragment = new PlaceholderFragment();
             Bundle args = new Bundle();
             args.putInt(ARG_SECTION_NUMBER, sectionNumber);
@@ -165,6 +179,8 @@ public class MainActivity extends Activity
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                 Bundle savedInstanceState) {
+            Log.i(TAG, "onCreateView()");
+            
             View rootView = inflater.inflate(R.layout.fragment_main, container, false);
             TextView textView = (TextView) rootView.findViewById(R.id.section_label);
             String bodyText =  Integer.toString(getArguments().getInt(ARG_SECTION_NUMBER))
@@ -176,6 +192,7 @@ public class MainActivity extends Activity
         @Override
         public void onAttach(Activity activity) {
             super.onAttach(activity);
+            Log.i(TAG, "onAttach()");
             ((MainActivity) activity).onSectionAttached(
                     getArguments().getInt(ARG_SECTION_NUMBER));
         }

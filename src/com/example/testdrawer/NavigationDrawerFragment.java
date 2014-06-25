@@ -1,15 +1,19 @@
 package com.example.testdrawer;
 
-import android.app.Activity;
+import java.util.ArrayList;
+
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.Fragment;
-import android.support.v4.app.ActionBarDrawerToggle;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -27,7 +31,9 @@ import android.widget.Toast;
  * design guidelines</a> for a complete explanation of the behaviors implemented here.
  */
 public class NavigationDrawerFragment extends Fragment {
-
+    private static final String TAG = "NavigationDrawerFragment";
+    private static final boolean LOGD = TestDrawer.LOGD;
+    
     /**
      * Remember the position of the selected item.
      */
@@ -58,15 +64,8 @@ public class NavigationDrawerFragment extends Fragment {
     private boolean mUserLearnedDrawer;
     
     // noeuli added [
-    private TestController mController;
-    
-    public void setController(TestController controller) {
-        mController = controller;
-    }
-    
-    public TestController getController() {
-        return mController;
-    }
+    private Context mContext;
+    private CalendarData mCalendarData;
     // noeuli added ]    
     
     public NavigationDrawerFragment() {
@@ -75,7 +74,12 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        Log.i(TAG, "onCreate()");
 
+        // noeuli
+        mContext = getActivity().getApplicationContext();
+        
         // Read in the flag indicating whether or not the user has demonstrated awareness of the
         // drawer. See PREF_USER_LEARNED_DRAWER for details.
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -93,15 +97,36 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public void onActivityCreated (Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        Log.i(TAG, "onActivityCreated()");
+        
         // Indicate that this fragment would like to influence the set of actions in the action bar.
         setHasOptionsMenu(true);
+    }
+    
+    private ArrayAdapter<String> mDrawerListAdapter;
+    
+    public void updateList() {
+        if (mCalendarData==null || mDrawerListAdapter==null) {
+            Log.e(TAG, "updateList() something null");
+            return;
+        }
+        
+        ArrayList<String> calendarLabels = mCalendarData.getCalendarListArray();
+        mDrawerListAdapter.clear();
+        mDrawerListAdapter.addAll(calendarLabels);
+        if (LOGD) Log.d(TAG, "updateList() size=" + calendarLabels.size());
+        mDrawerListAdapter.notifyDataSetChanged();
+        mDrawerListView.invalidate();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
+        Log.i(TAG, "onCreateView()");
+        
         // noeuli
-        mController = new TestController();
+        TestDrawer app = (TestDrawer) mContext;
+        mCalendarData = app.getCalendarData();
         
         mDrawerListView = (ListView) inflater.inflate(
                 R.layout.fragment_navigation_drawer, container, false);
@@ -113,24 +138,14 @@ public class NavigationDrawerFragment extends Fragment {
         });
         
         // noeuli - change to calener list
-        String[] calendarLabels = mController.getCalendarListArray(); 
-        mDrawerListView.setAdapter(new ArrayAdapter<String>(
+        ArrayList<String> calendarLabels = mCalendarData.getCalendarListArray(); 
+        mDrawerListAdapter = new ArrayAdapter<String>(
                 getActionBar().getThemedContext(),
                 android.R.layout.simple_list_item_1,
                 android.R.id.text1,
                 calendarLabels
-                ));
-        /* Original codes
-        mDrawerListView.setAdapter(new ArrayAdapter<String>(
-                getActionBar().getThemedContext(),
-                android.R.layout.simple_list_item_activated_1,
-                android.R.id.text1,
-                new String[]{
-                        getString(R.string.title_section1),
-                        getString(R.string.title_section2),
-                        getString(R.string.title_section3),
-                }));
-        */
+                );
+        mDrawerListView.setAdapter(mDrawerListAdapter);
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
         return mDrawerListView;
     }
@@ -146,6 +161,7 @@ public class NavigationDrawerFragment extends Fragment {
      * @param drawerLayout The DrawerLayout containing this fragment's UI.
      */
     public void setUp(int fragmentId, DrawerLayout drawerLayout) {
+        if (LOGD) Log.i(TAG, "setUp(" + fragmentId + ")");
         mFragmentContainerView = getActivity().findViewById(fragmentId);
         mDrawerLayout = drawerLayout;
 
@@ -275,13 +291,7 @@ public class NavigationDrawerFragment extends Fragment {
         if (item.getItemId() == R.id.action_example) {
             String toastMessage = "Example action.";
             Activity activity = getActivity();
-            if (activity instanceof MainActivity) {
-                MainActivity mainActivity = (MainActivity) activity;
-                // TODO: move showToast() method into other util class.
-                mainActivity.showToast(toastMessage);
-            } else {
-                Toast.makeText(getActivity(), toastMessage, Toast.LENGTH_SHORT).show();
-            }
+            ((TestDrawer)mContext).showToast(toastMessage);
             return true;
         }
 
